@@ -24,7 +24,7 @@ length = 80; % length of pipe [m]
 %% Material/Fluid Properties
 % Steel
 k_ss = 19; % [W/m*K] Thermal conductivity: 304 stainless steel (18% Cr, 8% Ni) at 300 deg C %%%CHECK%%%
-emissivity_ss = 0.2; % lightly oxidized, T~=600K
+emissivity_ss = 0.15; % lightly oxidized, T~=400K
 
 % Air
 dyn_visc = 10.78*10^-6; % dynamic viscosity of air at -30 deg C %%%CHECK%%%
@@ -58,7 +58,7 @@ T_surr = T_outside;
 R_cond = log(pipe_od/pipe_id)/(2*pi*length*k_ss);
 
 %% Heat transfer coefficient from radiation on the outside of the bare pipe
-T_w_g = 420.399; % educated GUESS, CONVERGES, [K]
+T_w_g = 583.3; % educated GUESS, CONVERGES, [K]
 h_rad = emissivity_ss*S_B_const*(T_w_g+T_surr)*(T_w_g^2+T_surr^2);
 R_rad = 1/(h_rad*pi*pipe_od*length);
 
@@ -77,7 +77,7 @@ R_conv = 1/(h_conv*pi*pipe_od*length);
 
 %V=IR analogy
 %R_total = R_cond + R_conv; % neglecting radiation
-R_total = R_cond + 1/((1/R_cond)+(1/R_rad)); % with radiation
+R_total = R_cond + 1/((1/R_conv)+(1/R_rad)); % with radiation
 
 q_out = (T_steam-T_inf)/(R_total); % Watts
 T_wall = T_steam - (q_out*R_cond);
