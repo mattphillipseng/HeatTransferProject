@@ -40,3 +40,4 @@ T_coldest = -30 + 273.15; % Coldest outside temp [K]
 
 %% Calculations
 R_cond = log(pipe_od/pipe_id) / (2*pi*length*k_ss); % R through pipe wall
+%test
