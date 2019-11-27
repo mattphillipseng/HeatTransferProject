@@ -91,6 +91,7 @@ T_wall_celsius = T_wall - 273.15;
 
 %% Condensation Rate for bare pipe
 condens_rate_bare = q_removed/h_fg % [kg/s]
+condens_rate_req = condens_rate_bare*(1/100); % [kg/s] design requirement 1%
 
 %% Steam Quality at exit of bare pipe
 m_dot_steam_out = m_dot - condens_rate_bare;
@@ -98,34 +99,48 @@ quality_bare = m_dot_steam_out/m_dot %mdot steam/mdot total
 
 
 %% Insulation Properties
-k_ins = 0.02; %[W/m*K] ***CHANGE***
+%k_ins = 0.02; %[W/m*K] ***CHANGE***
 
 %% Insulation Calculations
 % R_cond pipe known from before, doesn't change
-th=0; %insulation thickness
+%th=0; %insulation thickness
 ins_id = pipe_od;
-for th = 0.25:0.125:5.5 %iter over th of 1/4" to 5", 1/8" increment
-    ins_od = ins_id + 2*th*0.0254; % [m], converted inch to m for calculations
-    
-    % Conduction Resistance
-    R_cond_ins = log(ins_od/ins_id)/(2*pi*length*k_ins);
-    
-    % Convection Resistance
-    Re_ins = (wind*ins_od)/dyn_visc;
-    [c_ins,m_ins] = get_c_m(Re_ins);
-    n_ins = get_n(Pr_inf);
-    Nu_ins = c*(Re_ins^m_ins)*(Pr_inf^n_ins)*(Pr_inf/Pr_w)^0.25;
-    h_conv_ins = (Nu_ins*k_air)/(ins_od);
-    R_conv_ins = 1/(h_conv_ins*pi*ins_od*length);
-    
-    % Heat Transfer
-    R_tot_ins = R_cond_pipe + R_cond_ins + R_conv_ins;
-    q_rem_ins = (T_steam-T_inf)/(R_total_ins); % Watts (aka J/s)
-    
-    % Condensation rate and quality. REQUIREMENTS!
-    condens_rate_ins = q_rem_ins/h_fg % [kg/s]
-    
-    
+results=[];
+
+for k_ins = 0.01:0.005:0.04
+    for th = 0.25:0.125:5.5 %iter over thickness of 1/4" to 5", 1/8" increment
+        ins_od = ins_id + 2*th*0.0254; % [m], converted inch to m for calculations
+
+        % Conduction Resistance
+        R_cond_ins = log(ins_od/ins_id)/(2*pi*length*k_ins);
+
+        % Convection Resistance
+        Re_ins = (wind*ins_od)/dyn_visc;
+        [c_ins,m_ins] = get_c_m(Re_ins);
+        n_ins = get_n(Pr_inf);
+        Nu_ins = c*(Re_ins^m_ins)*(Pr_inf^n_ins)*(Pr_inf/Pr_w)^0.25;
+        h_conv_ins = (Nu_ins*k_air)/(ins_od);
+        R_conv_ins = 1/(h_conv_ins*pi*ins_od*length);
+
+        % Heat Transfer
+        R_tot_ins = R_cond_pipe + R_cond_ins + R_conv_ins;
+        q_rem_ins = (T_steam-T_inf)/(R_tot_ins); % Watts (aka J/s), removed Q
+
+        % Condensation rate. REQUIREMENT!
+        condens_rate_ins = q_rem_ins/h_fg % [kg/s]
+
+        % Steam quality. REQUIREMENT!
+        m_dot_steam_out_ins = m_dot - condens_rate_ins;
+        quality_ins =  m_dot_steam_out_ins/m_dot %mdot steam/mdot total
+
+        if (condens_rate_ins <= condens_rate_req) && (quality_ins > 0.99)
+            satisfies_reqs = true;
+        else 
+            satisfies_reqs = false;
+        end
+
+        % Data consolidation
+        this_results = [k_ins,th,q_rem_ins,condens_rate_ins,quality_ins,satisfies_reqs];
+        results = [results;this_results] %append this_results as a new row in results
+    end
 end
-
-
