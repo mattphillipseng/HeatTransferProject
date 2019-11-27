@@ -32,6 +32,11 @@ k_air = 22.02/1000; % thermal conductivity of air at -30 deg C %%%CHECK%%%
 Pr_inf = 0.716; % Prandlt number of air at -30 deg C, interpolated %%%CHECK%%%
 Pr_w = 0.7; % Prandlt number of air at ~100 deg C, this is a guess for wall temp %%%CHECK%%% CHANGE
 
+% Steam - Enthalpy
+h_fg = 1194.158*1000; % [J/kg]
+h_f = 1491.312*1000; % [J/kg]
+h_g = 2685.384*1000; % [J/kg]
+
 %% Internal Flow Parameters and Constants
 m_dot_per_hr = 6000; % [Kg/h]
 m_dot = m_dot_per_hr * 60; % [Kg/s]
@@ -75,11 +80,14 @@ h_conv = (Nu*k_air)/(pipe_od); % Heat transfer coefficient for outside convectio
 
 R_conv = 1/(h_conv*pi*pipe_od*length);
 
-%V=IR analogy
+% Thermal Circuit analogy
 %R_total = R_cond + R_conv; % neglecting radiation
 R_total = R_cond + 1/((1/R_conv)+(1/R_rad)); % with radiation
 
-q_out = (T_steam-T_inf)/(R_total); % Watts
+q_out = (T_steam-T_inf)/(R_total); % Watts (aka J/s)
 T_wall = T_steam - (q_out*R_cond);
 T_wall_celsius = T_wall - 273.15;
+
+%% Condensation Rate for bare pipe
+condens_rate_bare = q_out/h_fg; % [kg/s]
 
