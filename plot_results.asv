@@ -1,0 +1,21 @@
+function plot_results = plot_results(results)
+
+%% Prepare data
+k_vals = results(:,1) % x axis, [W/m*K]
+th_vals = results(:,2) % y axis, [inch]
+satisfies = results(:,6) % z axis [1 or 0]
+
+%% Make plots
+font_size = 15;
+line_size = 15;
+line_width = 2;
+
+figure 
+hold on
+contour(k_vals,th_vals,satisfies)
+%title('Design Chart','fontsize',font_size,'Interpreter','latex')
+xlabel('Insulation Thickness (inch)','fontsize',font_size,'Interpreter','latex');
+ylabel('Thermal Conductivity (W/m*K)','fontsize',font_size,'Interpreter','latex');
+
+print('Done ploy')
+end

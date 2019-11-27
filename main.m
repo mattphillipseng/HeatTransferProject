@@ -127,11 +127,11 @@ for k_ins = 0.01:0.005:0.04
         q_rem_ins = (T_steam-T_inf)/(R_tot_ins); % Watts (aka J/s), removed Q
 
         % Condensation rate. REQUIREMENT!
-        condens_rate_ins = q_rem_ins/h_fg % [kg/s]
+        condens_rate_ins = q_rem_ins/h_fg; % [kg/s]
 
         % Steam quality. REQUIREMENT!
         m_dot_steam_out_ins = m_dot - condens_rate_ins;
-        quality_ins =  m_dot_steam_out_ins/m_dot %mdot steam/mdot total
+        quality_ins =  m_dot_steam_out_ins/m_dot; %mdot steam/mdot total
 
         if (condens_rate_ins <= condens_rate_req) && (quality_ins > 0.99)
             satisfies_reqs = true;
@@ -141,6 +141,9 @@ for k_ins = 0.01:0.005:0.04
 
         % Data consolidation
         this_results = [k_ins,th,q_rem_ins,condens_rate_ins,quality_ins,satisfies_reqs];
-        results = [results;this_results] %append this_results as a new row in results
+        results = [results;this_results]; %append this_results as a new row in results
     end
 end
+
+%plot_results(results) %doesn't work and it too much of a pain
+%wanted to make a contour plot showing a good design region
