@@ -39,7 +39,7 @@ h_g = 2685.384*1000; % [J/kg]
 
 %% Internal Flow Parameters and Constants
 m_dot_per_hr = 6000; % [Kg/h]
-m_dot = m_dot_per_hr * 60; % [Kg/s]
+m_dot = m_dot_per_hr / (60*60); % [Kg/s]
 
 T_steam = 324.6675 + 273.15; % [K] interpolated from thermo tables at 12MPa=1200KPa
 
@@ -60,7 +60,7 @@ T_surr = T_outside;
 
 %% Conduction through pipe wall
 % R_thermal through pipe wall
-R_cond = log(pipe_od/pipe_id)/(2*pi*length*k_ss);
+R_cond_pipe = log(pipe_od/pipe_id)/(2*pi*length*k_ss);
 
 %% Heat transfer coefficient from radiation on the outside of the bare pipe
 T_w_g = 583.3; % educated GUESS, CONVERGES, [K]
@@ -78,16 +78,54 @@ Nu = c*(Re^m)*(Pr_inf^n)*(Pr_inf/Pr_w)^0.25;
 
 h_conv = (Nu*k_air)/(pipe_od); % Heat transfer coefficient for outside convection
 
+%% Heat Transfer Calculation
 R_conv = 1/(h_conv*pi*pipe_od*length);
 
 % Thermal Circuit analogy
-%R_total = R_cond + R_conv; % neglecting radiation
-R_total = R_cond + 1/((1/R_conv)+(1/R_rad)); % with radiation
+%R_total = R_cond_pipe + R_conv; % neglecting radiation
+R_total = R_cond_pipe + 1/((1/R_conv)+(1/R_rad)); % with radiation
 
-q_out = (T_steam-T_inf)/(R_total); % Watts (aka J/s)
-T_wall = T_steam - (q_out*R_cond);
+q_removed = (T_steam-T_inf)/(R_total); % Watts (aka J/s)
+T_wall = T_steam - (q_removed*R_cond_pipe);
 T_wall_celsius = T_wall - 273.15;
 
 %% Condensation Rate for bare pipe
-condens_rate_bare = q_out/h_fg; % [kg/s]
+condens_rate_bare = q_removed/h_fg % [kg/s]
+
+%% Steam Quality at exit of bare pipe
+m_dot_steam_out = m_dot - condens_rate_bare;
+quality_bare = m_dot_steam_out/m_dot %mdot steam/mdot total
+
+
+%% Insulation Properties
+k_ins = 0.02; %[W/m*K] ***CHANGE***
+
+%% Insulation Calculations
+% R_cond pipe known from before, doesn't change
+th=0; %insulation thickness
+ins_id = pipe_od;
+for th = 0.25:0.125:5.5 %iter over th of 1/4" to 5", 1/8" increment
+    ins_od = ins_id + 2*th*0.0254; % [m], converted inch to m for calculations
+    
+    % Conduction Resistance
+    R_cond_ins = log(ins_od/ins_id)/(2*pi*length*k_ins);
+    
+    % Convection Resistance
+    Re_ins = (wind*ins_od)/dyn_visc;
+    [c_ins,m_ins] = get_c_m(Re_ins);
+    n_ins = get_n(Pr_inf);
+    Nu_ins = c*(Re_ins^m_ins)*(Pr_inf^n_ins)*(Pr_inf/Pr_w)^0.25;
+    h_conv_ins = (Nu_ins*k_air)/(ins_od);
+    R_conv_ins = 1/(h_conv_ins*pi*ins_od*length);
+    
+    % Heat Transfer
+    R_tot_ins = R_cond_pipe + R_cond_ins + R_conv_ins;
+    q_rem_ins = (T_steam-T_inf)/(R_total_ins); % Watts (aka J/s)
+    
+    % Condensation rate and quality. REQUIREMENTS!
+    condens_rate_ins = q_rem_ins/h_fg % [kg/s]
+    
+    
+end
+
 
