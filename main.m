@@ -1,6 +1,5 @@
 %% MECH 346 Thermal Design Problem
-
-% Modified by Matthew Phillips
+% by Matthew Phillips
 
 close all
 clear all
@@ -15,7 +14,7 @@ S_B_const = 5.67*10^-8; %Stefan-Boltzmann constant
 
 %% Geometric Parameters and Constants
 pipe_id_inch = 4.81;
-pipe_od_inch = 5.56; 
+pipe_od_inch = 5.56;
 pipe_id = pipe_id_inch * 0.0254; %inner diam in [m]
 pipe_od = pipe_od_inch * 0.0254; % outer diam in [m]
 
@@ -23,14 +22,14 @@ length = 80; % length of pipe [m]
 
 %% Material/Fluid Properties
 % Steel
-k_ss = 19; % [W/m*K] Thermal conductivity: 304 stainless steel (18% Cr, 8% Ni) at 300 deg C %%%CHECK%%%
+k_ss = 19; % [W/m*K] Thermal conductivity: 304 stainless steel (18% Cr, 8% Ni) at 300 deg C
 emissivity_ss = 0.15; % lightly oxidized, T~=400K
 
 % Air
-dyn_visc = 10.78*10^-6; % dynamic viscosity of air at -30 deg C %%%CHECK%%%
-k_air = 22.02/1000; % thermal conductivity of air at -30 deg C %%%CHECK%%%
-Pr_inf = 0.716; % Prandlt number of air at -30 deg C, interpolated %%%CHECK%%%
-Pr_w = 0.7; % Prandlt number of air at ~100 deg C, this is a guess for wall temp %%%CHECK%%% CHANGE
+dyn_visc = 10.78*10^-6; % dynamic viscosity of air at -30 deg C
+k_air = 21.697/1000; % thermal conductivity of air at -30 deg C
+Pr_inf = 0.7243; % Prandlt number of air at -30 deg C, interpolated
+Pr_w = 0.68; % Prandlt number of air at ~310 deg C, this is a guess for wall temp
 
 % Steam - Enthalpy
 h_fg = 1194.158*1000; % [J/kg]
@@ -90,16 +89,16 @@ T_wall = T_steam - (q_removed*R_cond_pipe);
 T_wall_celsius = T_wall - 273.15;
 
 %% Condensation Rate for bare pipe
-condens_rate_bare = q_removed/h_fg % [kg/s]
+condens_rate_bare = q_removed/h_fg; % [kg/s]
 condens_rate_req = condens_rate_bare*(1/100); % [kg/s] design requirement 1%
 
 %% Steam Quality at exit of bare pipe
 m_dot_steam_out = m_dot - condens_rate_bare;
-quality_bare = m_dot_steam_out/m_dot %mdot steam/mdot total
+quality_bare = m_dot_steam_out/m_dot; %mdot steam/mdot total
 
 
 %% Insulation Properties
-%k_ins = 0.02; %[W/m*K] ***CHANGE***
+k_ins = 0.048; %[W/m*K] ***VARIABLE***
 
 %% Insulation Calculations
 % R_cond pipe known from before, doesn't change
@@ -107,7 +106,7 @@ quality_bare = m_dot_steam_out/m_dot %mdot steam/mdot total
 ins_id = pipe_od;
 results=[];
 
-for k_ins = 0.01:0.005:0.04
+%for k_ins = 0.01:0.005:0.04
     for th = 0.25:0.125:5.5 %iter over thickness of 1/4" to 5", 1/8" increment
         ins_od = ins_id + 2*th*0.0254; % [m], converted inch to m for calculations
 
@@ -138,12 +137,23 @@ for k_ins = 0.01:0.005:0.04
         else 
             satisfies_reqs = false;
         end
+        
+        %Insulation wall temps
+        T_ins_inner= T_steam - q_rem_ins*R_cond_pipe; % [K]
+        T_ins_outer= T_inf + q_rem_ins*R_conv_ins; % [K]
 
         % Data consolidation
-        this_results = [k_ins,th,q_rem_ins,condens_rate_ins,quality_ins,satisfies_reqs];
+        this_results = [k_ins,th,q_rem_ins,T_ins_inner,T_ins_outer,condens_rate_ins,quality_ins,satisfies_reqs];
         results = [results;this_results]; %append this_results as a new row in results
     end
-end
+%end
+
+
+%% Print Important Results
+condens_rate_bare
+quality_bare
+results
+
 
 %plot_results(results) %doesn't work and it too much of a pain
 %wanted to make a contour plot showing a good design region
