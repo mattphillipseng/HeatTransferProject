@@ -105,7 +105,7 @@ k_ins = 0.048; %[W/m*K] ***VARIABLE***
 %th=0; %insulation thickness
 ins_id = pipe_od;
 results=[];
-
+Pr_w_ins = 0.72; % with insulation, exterior wall of insulation isn't as hot
 %for k_ins = 0.01:0.005:0.04
     for th = 0.25:0.125:5.5 %iter over thickness of 1/4" to 5", 1/8" increment
         ins_od = ins_id + 2*th*0.0254; % [m], converted inch to m for calculations
@@ -117,7 +117,7 @@ results=[];
         Re_ins = (wind*ins_od)/dyn_visc;
         [c_ins,m_ins] = get_c_m(Re_ins);
         n_ins = get_n(Pr_inf);
-        Nu_ins = c*(Re_ins^m_ins)*(Pr_inf^n_ins)*(Pr_inf/Pr_w)^0.25;
+        Nu_ins = c*(Re_ins^m_ins)*(Pr_inf^n_ins)*(Pr_inf/Pr_w_ins)^0.25;
         h_conv_ins = (Nu_ins*k_air)/(ins_od);
         R_conv_ins = 1/(h_conv_ins*pi*ins_od*length);
 
